@@ -122,7 +122,7 @@ function App() {
           animate={{ opacity: 1, scale: 1 }}
           className="text-6xl font-black mb-4 outfit tracking-tighter"
         >
-          Nauka <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-magenta-400 to-cyan-400 animate-gradient">Słówek</span>
+          AI <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-magenta-400 to-cyan-400 animate-gradient">Vocabulary</span> Learning App
         </motion.h1>
         <p className="text-xl text-slate-400 max-w-2xl mx-auto">
           Opanuj nowe słownictwo dzięki spersonalizowanym historiom i inteligentnym quizom.

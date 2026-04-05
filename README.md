@@ -1,6 +1,6 @@
-# 📘 Nauka Słówek - AI Vocabulary Learning App
+# 📘 AI Vocabulary Learning App
 
-Nauka Słówek to interaktywna aplikacja webowa zaprojektowana do szybkiego i skutecznego opanowywania nowego słownictwa (np. z języków obcych) przy użyciu potęgi modelu **OpenAI GPT-4o-mini**. 
+AI Vocabulary Learning App to interaktywna aplikacja webowa zaprojektowana do szybkiego i skutecznego opanowywania nowego słownictwa (np. z języków obcych) przy użyciu potęgi modelu **OpenAI GPT-4o-mini**. 
 
 Aplikacja tworzy spersonalizowane historie i inteligentne quizy na podstawie słów, których aktualnie się uczysz.
 
