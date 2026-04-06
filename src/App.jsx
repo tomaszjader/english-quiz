@@ -4,6 +4,8 @@ import StoryViewer from './components/StoryViewer';
 import QuizSection from './components/QuizSection';
 import ApiKeySetup from './components/ApiKeySetup';
 import { AIService } from './services/AIService';
+import Logo from './components/Logo';
+
 import { Sparkles, GraduationCap, Settings, LogOut, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -113,7 +115,7 @@ function App() {
           animate={{ opacity: 1, y: 0 }}
           className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-2 rounded-full mb-6"
         >
-          <Sparkles className="text-cyan-400" size={18} />
+          <Logo className="w-4 h-4 opacity-80" />
           <span className="text-sm font-medium tracking-wide outfit text-cyan-200 uppercase">AI-Powered Language Learning</span>
         </motion.div>
         
