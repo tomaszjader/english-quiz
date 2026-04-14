@@ -1,83 +1,113 @@
-import { useState, useCallback } from 'react';
-import { AIService } from '../services/AIService';
+import { useCallback, useState } from 'react';
+import { APP_STEP, STORAGE_KEY } from '../constants/app';
+import {
+  generateQuestions as requestQuestions,
+  generateStory as requestStory,
+} from '../services/AIService';
+import {
+  normalizeQuestions,
+  normalizeStory,
+  sanitizeWords,
+} from '../utils/quiz';
+
+const readStoredApiKey = () => localStorage.getItem(STORAGE_KEY.OPENAI_API_KEY) || '';
 
 export const useQuiz = () => {
-    const [apiKey, setApiKey] = useState(localStorage.getItem('openai_api_key'));
-    const [step, setStep] = useState(apiKey ? 'input' : 'setup'); // 'setup', 'input', 'generating', 'story', 'quiz'
-    const [words, setWords] = useState([]);
-    const [story, setStory] = useState(null);
-    const [questions, setQuestions] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+  const [apiKey, setApiKey] = useState(readStoredApiKey);
+  const [step, setStep] = useState(apiKey ? APP_STEP.INPUT : APP_STEP.SETUP);
+  const [words, setWords] = useState([]);
+  const [story, setStory] = useState(null);
+  const [questions, setQuestions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-    const handleSaveKey = useCallback((key) => {
-        localStorage.setItem('openai_api_key', key);
-        setApiKey(key);
-        setStep('input');
-        setError(null);
-    }, []);
+  const resetSession = useCallback(() => {
+    setWords([]);
+    setStory(null);
+    setQuestions([]);
+    setLoading(false);
+    setError('');
+  }, []);
 
-    const handleClearKey = useCallback(() => {
-        localStorage.removeItem('openai_api_key');
-        setApiKey(null);
-        setStep('setup');
-    }, []);
+  const handleSaveKey = useCallback(
+    (key) => {
+      localStorage.setItem(STORAGE_KEY.OPENAI_API_KEY, key);
+      setApiKey(key);
+      resetSession();
+      setStep(APP_STEP.INPUT);
+    },
+    [resetSession],
+  );
 
-    const generateStory = useCallback(async (inputWords, category) => {
-        setLoading(true);
-        setError(null);
-        setStep('generating');
-        setWords(inputWords);
-        
-        try {
-            const generatedStory = await AIService.generateStory(inputWords, category, 'medium', apiKey);
-            setStory(generatedStory);
-            setStep('story');
-        } catch (err) {
-            console.error("Failed to generate story:", err);
-            setError('Błąd generowania historii. Sprawdź swój klucz API.');
-            setStep('input');
-        } finally {
-            setLoading(false);
-        }
-    }, [apiKey]);
+  const handleClearKey = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY.OPENAI_API_KEY);
+    setApiKey('');
+    resetSession();
+    setStep(APP_STEP.SETUP);
+  }, [resetSession]);
 
-    const startQuiz = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const generatedQuestions = await AIService.generateQuestions(story, apiKey);
-            setQuestions(generatedQuestions);
-            setStep('quiz');
-        } catch (err) {
-            console.error("Failed to generate questions:", err);
-            setError('Błąd generowania pytań. Sprawdź swój klucz API.');
-        } finally {
-            setLoading(false);
-        }
-    }, [story, apiKey]);
+  const generateStory = useCallback(
+    async (inputWords, category) => {
+      const nextWords = sanitizeWords(inputWords);
 
-    const restart = useCallback(() => {
-        setStep('input');
-        setWords([]);
-        setStory(null);
+      setLoading(true);
+      setError('');
+      setWords(nextWords);
+      setStep(APP_STEP.GENERATING);
+
+      try {
+        const response = await requestStory(nextWords, category, apiKey);
+        setStory(normalizeStory(response, nextWords));
         setQuestions([]);
-        setError(null);
-    }, []);
+        setStep(APP_STEP.STORY);
+      } catch (requestError) {
+        console.error('Failed to generate story:', requestError);
+        setError(requestError.message || 'Nie udalo sie wygenerowac historii.');
+        setStep(APP_STEP.INPUT);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [apiKey],
+  );
 
-    return {
-        step,
-        setStep,
-        apiKey,
-        words,
-        story,
-        questions,
-        loading,
-        error,
-        handleSaveKey,
-        handleClearKey,
-        generateStory,
-        startQuiz,
-        restart,
-    };
+  const startQuiz = useCallback(async () => {
+    if (!story) {
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await requestQuestions(story, apiKey);
+      setQuestions(normalizeQuestions(response));
+      setStep(APP_STEP.QUIZ);
+    } catch (requestError) {
+      console.error('Failed to generate questions:', requestError);
+      setError(requestError.message || 'Nie udalo sie wygenerowac pytan.');
+    } finally {
+      setLoading(false);
+    }
+  }, [apiKey, story]);
+
+  const restart = useCallback(() => {
+    resetSession();
+    setStep(apiKey ? APP_STEP.INPUT : APP_STEP.SETUP);
+  }, [apiKey, resetSession]);
+
+  return {
+    apiKey,
+    error,
+    loading,
+    questions,
+    step,
+    story,
+    words,
+    generateStory,
+    handleClearKey,
+    handleSaveKey,
+    restart,
+    startQuiz,
+  };
 };
