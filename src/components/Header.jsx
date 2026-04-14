@@ -35,11 +35,8 @@ const Header = ({ apiKey, onClearKey, onRestart }) => {
 
           <AnimatePresence>
             {open ? (
-              <motion.div
+              <div
                 className="settings-card"
-                initial={{ opacity: 0, y: -8, scale: 0.98 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -8, scale: 0.98 }}
               >
                 <p className="eyebrow">Session</p>
                 <div className="stack-xs">
@@ -70,7 +67,7 @@ const Header = ({ apiKey, onClearKey, onRestart }) => {
                   <KeyRound size={14} />
                   <span>Klucz zapisany lokalnie</span>
                 </div>
-              </motion.div>
+              </div>
             ) : null}
           </AnimatePresence>
         </div>
