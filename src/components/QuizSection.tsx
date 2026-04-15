@@ -1,10 +1,17 @@
 import { ArrowRight, CheckCircle2, Lightbulb, RefreshCw, Trophy, XCircle } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import type { Question, Story } from '../types';
 
-const QuizSection = ({ onRestart, questions, story }) => {
+interface QuizSectionProps {
+  onRestart: () => void;
+  questions: Question[];
+  story: Story | null;
+}
+
+const QuizSection = ({ onRestart, questions, story }: QuizSectionProps) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
-  const [selectedOption, setSelectedOption] = useState(null);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [showHint, setShowHint] = useState(false);
   const [finished, setFinished] = useState(false);
 
@@ -14,7 +21,7 @@ const QuizSection = ({ onRestart, questions, story }) => {
     [currentIndex, questions.length],
   );
 
-  const handleAnswer = (optionIndex) => {
+  const handleAnswer = (optionIndex: number) => {
     if (selectedOption !== null) {
       return;
     }

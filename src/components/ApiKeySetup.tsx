@@ -1,11 +1,15 @@
 import { ArrowRight, ExternalLink, KeyRound, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 
-const ApiKeySetup = ({ onSave }) => {
+interface ApiKeySetupProps {
+  onSave: (key: string) => void;
+}
+
+const ApiKeySetup = ({ onSave }: ApiKeySetupProps) => {
   const [key, setKey] = useState('');
   const [error, setError] = useState('');
 
-  const handleSubmit = (event) => {
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
     if (!key.startsWith('sk-')) {

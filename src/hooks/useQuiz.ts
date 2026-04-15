@@ -4,22 +4,23 @@ import {
   generateQuestions as requestQuestions,
   generateStory as requestStory,
 } from '../services/AIService';
+import type { AppStep, Question, Story, WordEntry, UseQuizReturn } from '../types';
 import {
   normalizeQuestions,
   normalizeStory,
   sanitizeWords,
 } from '../utils/quiz';
 
-const readStoredApiKey = () => localStorage.getItem(STORAGE_KEY.OPENAI_API_KEY) || '';
+const readStoredApiKey = (): string => localStorage.getItem(STORAGE_KEY.OPENAI_API_KEY) || '';
 
-export const useQuiz = () => {
-  const [apiKey, setApiKey] = useState(readStoredApiKey);
-  const [step, setStep] = useState(apiKey ? APP_STEP.INPUT : APP_STEP.SETUP);
-  const [words, setWords] = useState([]);
-  const [story, setStory] = useState(null);
-  const [questions, setQuestions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+export const useQuiz = (): UseQuizReturn => {
+  const [apiKey, setApiKey] = useState<string>(readStoredApiKey);
+  const [step, setStep] = useState<AppStep>(apiKey ? APP_STEP.INPUT : APP_STEP.SETUP);
+  const [words, setWords] = useState<WordEntry[]>([]);
+  const [story, setStory] = useState<Story | null>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
 
   const resetSession = useCallback(() => {
     setWords([]);
@@ -30,7 +31,7 @@ export const useQuiz = () => {
   }, []);
 
   const handleSaveKey = useCallback(
-    (key) => {
+    (key: string) => {
       localStorage.setItem(STORAGE_KEY.OPENAI_API_KEY, key);
       setApiKey(key);
       resetSession();
@@ -47,7 +48,7 @@ export const useQuiz = () => {
   }, [resetSession]);
 
   const generateStory = useCallback(
-    async (inputWords, category) => {
+    async (inputWords: WordEntry[], category: string) => {
       const nextWords = sanitizeWords(inputWords);
 
       setLoading(true);
@@ -62,7 +63,7 @@ export const useQuiz = () => {
         setStep(APP_STEP.STORY);
       } catch (requestError) {
         console.error('Failed to generate story:', requestError);
-        setError(requestError.message || 'Nie udalo sie wygenerowac historii.');
+        setError((requestError as Error).message || 'Nie udalo sie wygenerowac historii.');
         setStep(APP_STEP.INPUT);
       } finally {
         setLoading(false);
@@ -85,7 +86,7 @@ export const useQuiz = () => {
       setStep(APP_STEP.QUIZ);
     } catch (requestError) {
       console.error('Failed to generate questions:', requestError);
-      setError(requestError.message || 'Nie udalo sie wygenerowac pytan.');
+      setError((requestError as Error).message || 'Nie udalo sie wygenerowac pytan.');
     } finally {
       setLoading(false);
     }

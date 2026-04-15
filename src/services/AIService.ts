@@ -1,3 +1,5 @@
+import type { OpenAIRequestParams, OpenAIResponse, Story, Question } from '../types';
+
 const MODEL = 'gpt-4o-mini';
 
 const DEFAULT_HEADERS = {
@@ -7,11 +9,11 @@ const DEFAULT_HEADERS = {
 const DEFAULT_SYSTEM_PROMPT =
   'You are a helpful English learning assistant. Always answer with valid JSON only.';
 
-const buildErrorMessage = async (response) => {
-  let payload;
+const buildErrorMessage = async (response: Response): Promise<string> => {
+  let payload: Record<string, unknown> | null = null;
 
   try {
-    payload = await response.json();
+    payload = (await response.json()) as Record<string, unknown>;
   } catch {
     payload = null;
   }
@@ -24,10 +26,10 @@ const buildErrorMessage = async (response) => {
     return 'Przekroczono limit zapytan. Sprobuj ponownie za chwile.';
   }
 
-  return payload?.error?.message || 'Nie udalo sie polaczyc z OpenAI.';
+  return (payload?.error as Record<string, string>)?.message || 'Nie udalo sie polaczyc z OpenAI.';
 };
 
-const parseJsonContent = (content) => {
+const parseJsonContent = (content: string | null | undefined): unknown => {
   if (!content) {
     throw new Error('OpenAI nie zwrocilo tresci odpowiedzi.');
   }
@@ -39,7 +41,7 @@ const parseJsonContent = (content) => {
   }
 };
 
-const callOpenAI = async ({ apiKey, prompt, systemPrompt = DEFAULT_SYSTEM_PROMPT }) => {
+const callOpenAI = async ({ apiKey, prompt, systemPrompt = DEFAULT_SYSTEM_PROMPT }: OpenAIRequestParams): Promise<unknown> => {
   if (!apiKey) {
     throw new Error('Brak klucza API OpenAI. Wprowadz go przed generowaniem.');
   }
@@ -65,11 +67,18 @@ const callOpenAI = async ({ apiKey, prompt, systemPrompt = DEFAULT_SYSTEM_PROMPT
     throw new Error(await buildErrorMessage(response));
   }
 
-  const data = await response.json();
+  const data = (await response.json()) as OpenAIResponse;
   return parseJsonContent(data?.choices?.[0]?.message?.content);
 };
 
-const generateStoryPrompt = (words, category) => {
+interface WordEntry {
+  id: string;
+  word: string;
+  translation: string;
+  difficulty: string;
+}
+
+const generateStoryPrompt = (words: WordEntry[], category: string): string => {
   const vocabulary = words
     .map((entry) => `${entry.word}${entry.translation ? ` (${entry.translation})` : ''}`)
     .join(', ');
@@ -98,7 +107,7 @@ Return exactly this JSON object:
   `.trim();
 };
 
-const generateQuestionsPrompt = (story) => `
+const generateQuestionsPrompt = (story: Story): string => `
 Create 5 multiple-choice quiz questions based on this English story.
 
 Story title: ${story.title}
@@ -125,18 +134,18 @@ Return exactly this JSON object:
 }
 `.trim();
 
-export const generateStory = async (words, category, apiKey) =>
+export const generateStory = async (words: WordEntry[], category: string, apiKey: string): Promise<Story> =>
   callOpenAI({
     apiKey,
     prompt: generateStoryPrompt(words, category),
     systemPrompt:
       'You are a creative English teacher. Write engaging stories and answer with JSON only.',
-  });
+  }) as Promise<Story>;
 
-export const generateQuestions = async (story, apiKey) =>
+export const generateQuestions = async (story: Story, apiKey: string): Promise<{ questions: Question[] }> =>
   callOpenAI({
     apiKey,
     prompt: generateQuestionsPrompt(story),
     systemPrompt:
       'You are an expert English exam writer. Create fair quiz questions and answer with JSON only.',
-  });
+  }) as Promise<{ questions: Question[] }>;

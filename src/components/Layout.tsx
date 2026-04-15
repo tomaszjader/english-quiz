@@ -1,4 +1,10 @@
-const Layout = ({ children }) => (
+import type { ReactNode } from 'react';
+
+interface LayoutProps {
+  children: ReactNode;
+}
+
+const Layout = ({ children }: LayoutProps) => (
   <div className="page-shell">
     <div className="page-background" aria-hidden="true">
       <div className="glow glow-left" />

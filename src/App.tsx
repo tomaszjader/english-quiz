@@ -1,4 +1,5 @@
-import { AnimatePresence } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import ApiKeySetup from './components/ApiKeySetup';
 import Footer from './components/Footer';
 import Header from './components/Header';
@@ -9,7 +10,7 @@ import VocabularyInput from './components/VocabularyInput';
 import { APP_STEP } from './constants/app';
 import { useQuiz } from './hooks/useQuiz';
 
-const screenVariants = {
+const screenVariants: Variants = {
   animate: { opacity: 1, y: 0 },
   exit: { opacity: 0, y: -12 },
   initial: { opacity: 0, y: 12 },

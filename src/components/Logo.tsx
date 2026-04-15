@@ -1,10 +1,14 @@
-import React from 'react';
+import type { SVGProps } from 'react';
 
-const Logo = ({ className = "w-12 h-12", ...props }) => {
+interface LogoProps extends SVGProps<SVGSVGElement> {
+  className?: string;
+}
+
+const Logo = ({ className = "w-12 h-12", ...props }: LogoProps) => {
   return (
-    <svg 
-      viewBox="0 0 100 100" 
-      fill="none" 
+    <svg
+      viewBox="0 0 100 100"
+      fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       {...props}
@@ -22,17 +26,17 @@ const Logo = ({ className = "w-12 h-12", ...props }) => {
       </defs>
 
       {/* Book/Brain Stylized Shape */}
-      <path 
-        d="M20 30C20 24.4772 24.4772 20 30 20H70C75.5228 20 80 24.4772 80 30V70C80 75.5228 75.5228 80 70 80H30C24.4772 80 20 75.5228 20 70V30Z" 
-        fill="url(#logo-gradient)" 
+      <path
+        d="M20 30C20 24.4772 24.4772 20 30 20H70C75.5228 20 80 24.4772 80 30V70C80 75.5228 75.5228 80 70 80H30C24.4772 80 20 75.5228 20 70V30Z"
+        fill="url(#logo-gradient)"
         fillOpacity="0.1"
         stroke="url(#logo-gradient)"
         strokeWidth="2"
       />
-      
+
       {/* Central AI/Spark Element */}
-      <path 
-        d="M50 35L55 45H65L57 52L60 62L50 55L40 62L43 52L35 45H45L50 35Z" 
+      <path
+        d="M50 35L55 45H65L57 52L60 62L50 55L40 62L43 52L35 45H45L50 35Z"
         fill="url(#logo-gradient)"
         filter="url(#glow)"
       />
@@ -42,7 +46,7 @@ const Logo = ({ className = "w-12 h-12", ...props }) => {
       <circle cx="70" cy="70" r="3" fill="#ff00ff" />
       <circle cx="70" cy="30" r="2" fill="#00f5ff" opacity="0.5" />
       <circle cx="30" cy="70" r="2" fill="#ff00ff" opacity="0.5" />
-      
+
       <path d="M30 30L50 50L70 70" stroke="url(#logo-gradient)" strokeWidth="1" strokeDasharray="2 2" opacity="0.5" />
       <path d="M70 30L50 50L30 70" stroke="url(#logo-gradient)" strokeWidth="1" strokeDasharray="2 2" opacity="0.5" />
     </svg>

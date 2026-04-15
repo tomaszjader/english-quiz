@@ -3,7 +3,13 @@ import { KeyRound, RefreshCw, Settings, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import Logo from './Logo';
 
-const Header = ({ apiKey, onClearKey, onRestart }) => {
+interface HeaderProps {
+  apiKey: string;
+  onClearKey: () => void;
+  onRestart: () => void;
+}
+
+const Header = ({ apiKey, onClearKey, onRestart }: HeaderProps) => {
   const [open, setOpen] = useState(false);
 
   return (

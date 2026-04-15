@@ -1,9 +1,16 @@
 import { AnimatePresence } from 'framer-motion';
 import { ArrowRight, BookOpenText, Languages, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import type { Story } from '../types';
 import { normalizeLookup, tokenizeStory } from '../utils/quiz';
 
-const StoryViewer = ({ loading, onStartQuiz, story }) => {
+interface StoryViewerProps {
+  loading: boolean;
+  onStartQuiz: () => void;
+  story: Story;
+}
+
+const StoryViewer = ({ loading, onStartQuiz, story }: StoryViewerProps) => {
   const [selectedWord, setSelectedWord] = useState('');
   const [showTranslations, setShowTranslations] = useState(false);
 

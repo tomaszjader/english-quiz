@@ -1,12 +1,18 @@
 import { Plus, Sparkles, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { CATEGORY_OPTIONS, DIFFICULTY_OPTIONS, QUIZ_LIMITS } from '../constants/app';
+import type { WordEntry } from '../types';
 import { createWordEntry, sanitizeWords } from '../utils/quiz';
 
-const VocabularyInput = ({ initialWords = [], onGenerate }) => {
+interface VocabularyInputProps {
+  initialWords?: WordEntry[];
+  onGenerate: (words: WordEntry[], category: string) => void;
+}
+
+const VocabularyInput = ({ initialWords = [], onGenerate }: VocabularyInputProps) => {
   const [category, setCategory] = useState(CATEGORY_OPTIONS[0].value);
   const [error, setError] = useState('');
-  const [words, setWords] = useState(() =>
+  const [words, setWords] = useState<WordEntry[]>(() =>
     initialWords.length ? sanitizeWords(initialWords) : [createWordEntry()],
   );
 
@@ -15,7 +21,7 @@ const VocabularyInput = ({ initialWords = [], onGenerate }) => {
     [category],
   );
 
-  const updateWord = (id, field, value) => {
+  const updateWord = (id: string, field: keyof WordEntry, value: string) => {
     setWords((currentWords) =>
       currentWords.map((entry) => (entry.id === id ? { ...entry, [field]: value } : entry)),
     );
@@ -27,13 +33,13 @@ const VocabularyInput = ({ initialWords = [], onGenerate }) => {
     );
   };
 
-  const removeWord = (id) => {
+  const removeWord = (id: string) => {
     setWords((currentWords) =>
       currentWords.length === 1 ? currentWords : currentWords.filter((entry) => entry.id !== id),
     );
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
     const validWords = sanitizeWords(words);
