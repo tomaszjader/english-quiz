@@ -50,6 +50,7 @@ function App() {
     handleClearKey,
     handleSaveKey,
     restart,
+    saveWords,
     startQuiz,
   } = useQuiz();
 
@@ -61,7 +62,12 @@ function App() {
         <AnimatePresence mode="wait">
           {step === APP_STEP.SETUP && <ApiKeySetup key="setup" onSave={handleSaveKey} />}
           {step === APP_STEP.INPUT && (
-            <VocabularyInput key="input" initialWords={words} onGenerate={generateStory} />
+            <VocabularyInput
+              key="input"
+              initialWords={words}
+              onGenerate={generateStory}
+              onSave={saveWords}
+            />
           )}
           {step === APP_STEP.GENERATING && <LoadingScreen key="generating" />}
           {step === APP_STEP.STORY && story && (

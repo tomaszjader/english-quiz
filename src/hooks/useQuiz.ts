@@ -13,10 +13,21 @@ import {
 
 const readStoredApiKey = (): string => localStorage.getItem(STORAGE_KEY.OPENAI_API_KEY) || '';
 
+const readStoredWords = (): WordEntry[] => {
+  const stored = localStorage.getItem(STORAGE_KEY.WORDS);
+  if (!stored) return [];
+  try {
+    return JSON.parse(stored);
+  } catch (e) {
+    console.error('Failed to parse stored words:', e);
+    return [];
+  }
+};
+
 export const useQuiz = (): UseQuizReturn => {
   const [apiKey, setApiKey] = useState<string>(readStoredApiKey);
   const [step, setStep] = useState<AppStep>(apiKey ? APP_STEP.INPUT : APP_STEP.SETUP);
-  const [words, setWords] = useState<WordEntry[]>([]);
+  const [words, setWords] = useState<WordEntry[]>(readStoredWords);
   const [story, setStory] = useState<Story | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -54,6 +65,7 @@ export const useQuiz = (): UseQuizReturn => {
       setLoading(true);
       setError('');
       setWords(nextWords);
+      localStorage.setItem(STORAGE_KEY.WORDS, JSON.stringify(nextWords));
       setStep(APP_STEP.GENERATING);
 
       try {
@@ -95,7 +107,15 @@ export const useQuiz = (): UseQuizReturn => {
   const restart = useCallback(() => {
     resetSession();
     setStep(apiKey ? APP_STEP.INPUT : APP_STEP.SETUP);
+    // Reload words from storage on restart to keep persistence
+    setWords(readStoredWords());
   }, [apiKey, resetSession]);
+
+  const saveWords = useCallback((nextWords: WordEntry[]) => {
+    const sanitized = sanitizeWords(nextWords);
+    setWords(sanitized);
+    localStorage.setItem(STORAGE_KEY.WORDS, JSON.stringify(sanitized));
+  }, []);
 
   return {
     apiKey,
@@ -109,6 +129,7 @@ export const useQuiz = (): UseQuizReturn => {
     handleClearKey,
     handleSaveKey,
     restart,
+    saveWords,
     startQuiz,
   };
 };

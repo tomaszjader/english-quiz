@@ -42,6 +42,7 @@ export interface QuizLimits {
 
 export interface StorageKey {
   OPENAI_API_KEY: string;
+  WORDS: string;
 }
 
 export interface AppStepConstants {
@@ -78,5 +79,6 @@ export interface UseQuizReturn {
   handleClearKey: () => void;
   handleSaveKey: (key: string) => void;
   restart: () => void;
+  saveWords: (words: WordEntry[]) => void;
   startQuiz: () => Promise<void>;
 }

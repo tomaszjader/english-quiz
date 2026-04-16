@@ -17,6 +17,7 @@ export const APP_STEP: AppStepConstants = {
 
 export const STORAGE_KEY: StorageKey = {
   OPENAI_API_KEY: 'openai_api_key',
+  WORDS: 'vocabulary_list',
 };
 
 export const CATEGORY_OPTIONS: CategoryOption[] = [

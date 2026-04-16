@@ -1,4 +1,4 @@
-import { Plus, Sparkles, Trash2 } from 'lucide-react';
+import { Check, Plus, Save, Sparkles, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { CATEGORY_OPTIONS, DIFFICULTY_OPTIONS, QUIZ_LIMITS } from '../constants/app';
 import type { WordEntry } from '../types';
@@ -7,11 +7,13 @@ import { createWordEntry, sanitizeWords } from '../utils/quiz';
 interface VocabularyInputProps {
   initialWords?: WordEntry[];
   onGenerate: (words: WordEntry[], category: string) => void;
+  onSave?: (words: WordEntry[]) => void;
 }
 
-const VocabularyInput = ({ initialWords = [], onGenerate }: VocabularyInputProps) => {
+const VocabularyInput = ({ initialWords = [], onGenerate, onSave }: VocabularyInputProps) => {
   const [category, setCategory] = useState(CATEGORY_OPTIONS[0].value);
   const [error, setError] = useState('');
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [words, setWords] = useState<WordEntry[]>(() =>
     initialWords.length ? sanitizeWords(initialWords) : [createWordEntry()],
   );
@@ -37,6 +39,14 @@ const VocabularyInput = ({ initialWords = [], onGenerate }: VocabularyInputProps
     setWords((currentWords) =>
       currentWords.length === 1 ? currentWords : currentWords.filter((entry) => entry.id !== id),
     );
+  };
+
+  const handleSave = () => {
+    if (onSave) {
+      onSave(words);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+    }
   };
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -135,6 +145,16 @@ const VocabularyInput = ({ initialWords = [], onGenerate }: VocabularyInputProps
           <button className="button button-secondary" type="button" onClick={addWord}>
             <Plus size={18} />
             Dodaj slowo
+          </button>
+
+          <button
+            className={`button ${saveSuccess ? 'button-success' : 'button-secondary'}`}
+            type="button"
+            onClick={handleSave}
+            disabled={!onSave}
+          >
+            {saveSuccess ? <Check size={18} /> : <Save size={18} />}
+            {saveSuccess ? 'Zapisano!' : 'Zapisz liste'}
           </button>
 
           <button className="button button-primary button-large" type="submit">
