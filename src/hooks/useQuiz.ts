@@ -107,7 +107,6 @@ export const useQuiz = (): UseQuizReturn => {
   const restart = useCallback(() => {
     resetSession();
     setStep(apiKey ? APP_STEP.INPUT : APP_STEP.SETUP);
-    // Reload words from storage on restart to keep persistence
     setWords(readStoredWords());
   }, [apiKey, resetSession]);
 
