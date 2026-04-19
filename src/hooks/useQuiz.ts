@@ -12,6 +12,7 @@ import {
 } from '../utils/quiz';
 
 const readStoredApiKey = (): string => localStorage.getItem(STORAGE_KEY.OPENAI_API_KEY) || '';
+const readStoredLanguage = (): string => localStorage.getItem(STORAGE_KEY.TARGET_LANGUAGE) || 'English';
 
 const readStoredWords = (): WordEntry[] => {
   const stored = localStorage.getItem(STORAGE_KEY.WORDS);
@@ -24,10 +25,23 @@ const readStoredWords = (): WordEntry[] => {
   }
 };
 
+const readHistory = (): WordEntry[] => {
+  const stored = localStorage.getItem(STORAGE_KEY.LEARNED_WORDS);
+  if (!stored) return [];
+  try {
+    return JSON.parse(stored);
+  } catch (e) {
+    console.error('Failed to parse history:', e);
+    return [];
+  }
+};
+
 export const useQuiz = (): UseQuizReturn => {
   const [apiKey, setApiKey] = useState<string>(readStoredApiKey);
+  const [targetLanguage, setTargetLanguageState] = useState<string>(readStoredLanguage);
   const [step, setStep] = useState<AppStep>(apiKey ? APP_STEP.INPUT : APP_STEP.SETUP);
   const [words, setWords] = useState<WordEntry[]>(readStoredWords);
+  const [history, setHistory] = useState<WordEntry[]>(readHistory);
   const [story, setStory] = useState<Story | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -51,6 +65,11 @@ export const useQuiz = (): UseQuizReturn => {
     [resetSession],
   );
 
+  const setTargetLanguage = useCallback((lang: string) => {
+    localStorage.setItem(STORAGE_KEY.TARGET_LANGUAGE, lang);
+    setTargetLanguageState(lang);
+  }, []);
+
   const handleClearKey = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY.OPENAI_API_KEY);
     setApiKey('');
@@ -69,10 +88,24 @@ export const useQuiz = (): UseQuizReturn => {
       setStep(APP_STEP.GENERATING);
 
       try {
-        const response = await requestStory(nextWords, category, apiKey);
-        setStory(normalizeStory(response, nextWords));
+        const response = await requestStory(nextWords, category, apiKey, targetLanguage);
+        const normalized = normalizeStory(response, nextWords);
+        setStory(normalized);
         setQuestions([]);
         setStep(APP_STEP.STORY);
+
+        // Add to history
+        const existingHistory = readHistory();
+        const updatedHistory = [...nextWords, ...existingHistory].reduce((acc: WordEntry[], curr) => {
+          if (!acc.find(item => item.word.toLowerCase() === curr.word.toLowerCase())) {
+            acc.push(curr);
+          }
+          return acc;
+        }, []).slice(0, 100);
+        
+        localStorage.setItem(STORAGE_KEY.LEARNED_WORDS, JSON.stringify(updatedHistory));
+        setHistory(updatedHistory);
+
       } catch (requestError) {
         console.error('Failed to generate story:', requestError);
         setError((requestError as Error).message || 'Nie udalo sie wygenerowac historii.');
@@ -81,7 +114,7 @@ export const useQuiz = (): UseQuizReturn => {
         setLoading(false);
       }
     },
-    [apiKey],
+    [apiKey, targetLanguage],
   );
 
   const startQuiz = useCallback(async () => {
@@ -124,11 +157,15 @@ export const useQuiz = (): UseQuizReturn => {
     step,
     story,
     words,
+    targetLanguage,
+    history,
     generateStory,
     handleClearKey,
     handleSaveKey,
     restart,
     saveWords,
     startQuiz,
+    setTargetLanguage,
+    setStep,
   };
 };

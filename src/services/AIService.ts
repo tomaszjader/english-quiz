@@ -78,13 +78,13 @@ interface WordEntry {
   difficulty: string;
 }
 
-const generateStoryPrompt = (words: WordEntry[], category: string): string => {
+const generateStoryPrompt = (words: WordEntry[], category: string, targetLanguage: string): string => {
   const vocabulary = words
     .map((entry) => `${entry.word}${entry.translation ? ` (${entry.translation})` : ''}`)
     .join(', ');
 
   return `
-Create one short English story for vocabulary practice.
+Create one short ${targetLanguage} story for vocabulary practice.
 
 Category: ${category}
 Target vocabulary: ${vocabulary}
@@ -97,8 +97,8 @@ Requirements:
 
 Return exactly this JSON object:
 {
-  "title": "Short engaging title",
-  "content": "Full story text",
+  "title": "Short engaging title (in ${targetLanguage})",
+  "content": "Full story text (in ${targetLanguage})",
   "targetWords": ["word1", "word2"],
   "wordTranslations": {
     "word1": "polskie tlumaczenie"
@@ -134,12 +134,12 @@ Return exactly this JSON object:
 }
 `.trim();
 
-export const generateStory = async (words: WordEntry[], category: string, apiKey: string): Promise<Story> =>
+export const generateStory = async (words: WordEntry[], category: string, apiKey: string, targetLanguage: string = 'English'): Promise<Story> =>
   callOpenAI({
     apiKey,
-    prompt: generateStoryPrompt(words, category),
+    prompt: generateStoryPrompt(words, category, targetLanguage),
     systemPrompt:
-      'You are a creative English teacher. Write engaging stories and answer with JSON only.',
+      `You are a creative ${targetLanguage} teacher. Write engaging stories and answer with JSON only.`,
   }) as Promise<Story>;
 
 export const generateQuestions = async (story: Story, apiKey: string): Promise<{ questions: Question[] }> =>

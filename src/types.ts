@@ -43,6 +43,8 @@ export interface QuizLimits {
 export interface StorageKey {
   OPENAI_API_KEY: string;
   WORDS: string;
+  LEARNED_WORDS: string;
+  TARGET_LANGUAGE: string;
 }
 
 export interface AppStepConstants {
@@ -75,10 +77,14 @@ export interface UseQuizReturn {
   step: AppStep;
   story: Story | null;
   words: WordEntry[];
+  targetLanguage: string;
+  history: WordEntry[];
   generateStory: (words: WordEntry[], category: string) => Promise<void>;
   handleClearKey: () => void;
   handleSaveKey: (key: string) => void;
   restart: () => void;
   saveWords: (words: WordEntry[]) => void;
   startQuiz: () => Promise<void>;
+  setTargetLanguage: (lang: string) => void;
+  setStep: (step: AppStep) => void;
 }

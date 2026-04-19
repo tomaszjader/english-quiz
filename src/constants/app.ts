@@ -18,7 +18,19 @@ export const APP_STEP: AppStepConstants = {
 export const STORAGE_KEY: StorageKey = {
   OPENAI_API_KEY: 'openai_api_key',
   WORDS: 'vocabulary_list',
+  LEARNED_WORDS: 'learned_words_history',
+  TARGET_LANGUAGE: 'target_study_language',
 };
+
+export const LANGUAGE_OPTIONS = [
+  { value: 'english', label: 'Angielski', flag: '🇬🇧' },
+  { value: 'spanish', label: 'Hiszpański', flag: '🇪🇸' },
+  { value: 'german', label: 'Niemiecki', flag: '🇩🇪' },
+  { value: 'french', label: 'Francuski', flag: '🇫🇷' },
+  { value: 'italian', label: 'Włoski', flag: '🇮🇹' },
+  { value: 'polish', label: 'Polski', flag: '🇵🇱' },
+  { value: 'other', label: 'Inny', flag: '🌐' },
+];
 
 export const CATEGORY_OPTIONS: CategoryOption[] = [
   { value: 'general', label: 'Ogolne', description: 'Uniwersalne slownictwo do codziennej nauki.' },
