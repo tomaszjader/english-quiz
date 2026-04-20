@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LANGUAGE_OPTIONS } from '../constants/app';
+import { LANGUAGE_OPTIONS, APP_STEP } from '../constants/app';
 import type { WordEntry, AppStep } from '../types';
 
 interface SettingsViewProps {
@@ -222,8 +222,8 @@ const SettingsView = ({
       </div>
 
       <div className="pt-8">
-        <button 
-          onClick={() => onNavigate('input')}
+        <button
+          onClick={() => onNavigate(APP_STEP.INPUT)}
           className="w-full p-4 rounded-2xl bg-surface-container-highest border border-white/5 text-on-surface font-bold text-sm hover:bg-surface-bright transition-all flex items-center justify-center gap-2"
         >
           <span className="material-symbols-outlined">home</span>

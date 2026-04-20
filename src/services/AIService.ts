@@ -1,6 +1,7 @@
-import type { OpenAIRequestParams, OpenAIResponse, Story, Question } from '../types';
+import type { OpenAIRequestParams, OpenAIResponse, Story, Question, WordEntry } from '../types';
 
 const MODEL = 'gpt-4o-mini';
+const FETCH_TIMEOUT_MS = 30000;
 
 const DEFAULT_HEADERS = {
   'Content-Type': 'application/json',
@@ -41,42 +42,83 @@ const parseJsonContent = (content: string | null | undefined): unknown => {
   }
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const parseStory = (raw: unknown): Story => {
+  if (!isRecord(raw)) {
+    throw new Error('OpenAI zwrocilo odpowiedz w niepoprawnym formacie.');
+  }
+
+  const title = typeof raw.title === 'string' ? raw.title.trim() : 'Your Story';
+  const content = typeof raw.content === 'string' ? raw.content.trim() : '';
+  const targetWords = Array.isArray(raw.targetWords) && raw.targetWords.every(w => typeof w === 'string')
+    ? raw.targetWords
+    : [];
+  const wordTranslations = isRecord(raw.wordTranslations) ? raw.wordTranslations as Record<string, string> : {};
+
+  if (!content) {
+    throw new Error('AI nie zwrocilo tresci historii.');
+  }
+
+  return { title, content, targetWords, wordTranslations };
+};
+
+const parseQuestions = (raw: unknown): { questions: Question[] } => {
+  if (!isRecord(raw)) {
+    throw new Error('OpenAI zwrocilo odpowiedz w niepoprawnym formacie.');
+  }
+
+  const rawQuestions = Array.isArray(raw.questions) ? raw.questions : [];
+  if (!Array.isArray(rawQuestions)) {
+    throw new Error('AI zwrocilo niepoprawny format pytan.');
+  }
+
+  return { questions: rawQuestions as unknown[] as Question[] };
+};
+
 const callOpenAI = async ({ apiKey, prompt, systemPrompt = DEFAULT_SYSTEM_PROMPT }: OpenAIRequestParams): Promise<unknown> => {
   if (!apiKey) {
     throw new Error('Brak klucza API OpenAI. Wprowadz go przed generowaniem.');
   }
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      ...DEFAULT_HEADERS,
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: MODEL,
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: prompt },
-      ],
-      response_format: { type: 'json_object' },
-      temperature: 0.8,
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
 
-  if (!response.ok) {
-    throw new Error(await buildErrorMessage(response));
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        ...DEFAULT_HEADERS,
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: prompt },
+        ],
+        response_format: { type: 'json_object' },
+        temperature: 0.8,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      throw new Error(await buildErrorMessage(response));
+    }
+
+    const data = (await response.json()) as OpenAIResponse;
+    return parseJsonContent(data?.choices?.[0]?.message?.content);
+  } catch (e) {
+    if (e instanceof Error && e.name === 'AbortError') {
+      throw new Error('Zapytanie do OpenAI przekroczyl limit czasu. Sprobuj ponownie.');
+    }
+    throw e;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  const data = (await response.json()) as OpenAIResponse;
-  return parseJsonContent(data?.choices?.[0]?.message?.content);
 };
-
-interface WordEntry {
-  id: string;
-  word: string;
-  translation: string;
-  difficulty: string;
-}
 
 const generateStoryPrompt = (words: WordEntry[], category: string, targetLanguage: string): string => {
   const vocabulary = words
@@ -134,18 +176,22 @@ Return exactly this JSON object:
 }
 `.trim();
 
-export const generateStory = async (words: WordEntry[], category: string, apiKey: string, targetLanguage: string = 'English'): Promise<Story> =>
-  callOpenAI({
+export const generateStory = async (words: WordEntry[], category: string, apiKey: string, targetLanguage: string = 'English'): Promise<Story> => {
+  const raw = await callOpenAI({
     apiKey,
     prompt: generateStoryPrompt(words, category, targetLanguage),
     systemPrompt:
       `You are a creative ${targetLanguage} teacher. Write engaging stories and answer with JSON only.`,
-  }) as Promise<Story>;
+  });
+  return parseStory(raw);
+};
 
-export const generateQuestions = async (story: Story, apiKey: string): Promise<{ questions: Question[] }> =>
-  callOpenAI({
+export const generateQuestions = async (story: Story, apiKey: string): Promise<{ questions: Question[] }> => {
+  const raw = await callOpenAI({
     apiKey,
     prompt: generateQuestionsPrompt(story),
     systemPrompt:
       'You are an expert English exam writer. Create fair quiz questions and answer with JSON only.',
-  }) as Promise<{ questions: Question[] }>;
+  });
+  return parseQuestions(raw);
+};

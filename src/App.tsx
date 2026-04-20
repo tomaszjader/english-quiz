@@ -60,6 +60,7 @@ function App() {
     startQuiz,
     setTargetLanguage,
     setStep,
+    clearError,
   } = useQuiz();
 
   // Map app steps to sidebar/layout steps
@@ -131,8 +132,8 @@ function App() {
             >
               <span className="material-symbols-outlined">error</span>
               <p className="font-bold text-sm">{error}</p>
-              <button 
-                onClick={() => window.location.reload()}
+              <button
+                onClick={clearError}
                 className="ml-4 p-1 hover:bg-white/10 rounded-full transition-colors"
               >
                 <span className="material-symbols-outlined text-sm">close</span>

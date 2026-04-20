@@ -11,6 +11,18 @@ import {
   sanitizeWords,
 } from '../utils/quiz';
 
+const getErrorMessage = (e: unknown): string => {
+  if (e instanceof Error) return e.message;
+  if (typeof e === 'string') return e;
+  return 'Cos poszlo nie tak. Sprobuj ponownie.';
+};
+
+const isWordEntry = (v: unknown): v is WordEntry => {
+  if (typeof v !== 'object' || v === null) return false;
+  const obj = v as Record<string, unknown>;
+  return typeof obj.id === 'string' && typeof obj.word === 'string';
+};
+
 const readStoredApiKey = (): string => localStorage.getItem(STORAGE_KEY.OPENAI_API_KEY) || '';
 const readStoredLanguage = (): string => localStorage.getItem(STORAGE_KEY.TARGET_LANGUAGE) || 'English';
 
@@ -18,7 +30,8 @@ const readStoredWords = (): WordEntry[] => {
   const stored = localStorage.getItem(STORAGE_KEY.WORDS);
   if (!stored) return [];
   try {
-    return JSON.parse(stored);
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed.filter(isWordEntry) : [];
   } catch (e) {
     console.error('Failed to parse stored words:', e);
     return [];
@@ -29,7 +42,8 @@ const readHistory = (): WordEntry[] => {
   const stored = localStorage.getItem(STORAGE_KEY.LEARNED_WORDS);
   if (!stored) return [];
   try {
-    return JSON.parse(stored);
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed.filter(isWordEntry) : [];
   } catch (e) {
     console.error('Failed to parse history:', e);
     return [];
@@ -108,7 +122,7 @@ export const useQuiz = (): UseQuizReturn => {
 
       } catch (requestError) {
         console.error('Failed to generate story:', requestError);
-        setError((requestError as Error).message || 'Nie udalo sie wygenerowac historii.');
+        setError(getErrorMessage(requestError));
         setStep(APP_STEP.INPUT);
       } finally {
         setLoading(false);
@@ -131,11 +145,16 @@ export const useQuiz = (): UseQuizReturn => {
       setStep(APP_STEP.QUIZ);
     } catch (requestError) {
       console.error('Failed to generate questions:', requestError);
-      setError((requestError as Error).message || 'Nie udalo sie wygenerowac pytan.');
+      setError(getErrorMessage(requestError));
+      setStep(APP_STEP.STORY);
     } finally {
       setLoading(false);
     }
   }, [apiKey, story]);
+
+  const clearError = useCallback(() => {
+    setError('');
+  }, []);
 
   const restart = useCallback(() => {
     resetSession();
@@ -167,5 +186,6 @@ export const useQuiz = (): UseQuizReturn => {
     startQuiz,
     setTargetLanguage,
     setStep,
+    clearError,
   };
 };

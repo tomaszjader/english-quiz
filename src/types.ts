@@ -87,4 +87,5 @@ export interface UseQuizReturn {
   startQuiz: () => Promise<void>;
   setTargetLanguage: (lang: string) => void;
   setStep: (step: AppStep) => void;
+  clearError: () => void;
 }

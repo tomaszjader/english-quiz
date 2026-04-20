@@ -17,26 +17,39 @@ export const sanitizeWords = (words: WordEntry[] = []): WordEntry[] =>
     .filter((entry): entry is WordEntry => Boolean(entry.word));
 
 export const normalizeStory = (story: unknown, fallbackWords: WordEntry[] = []): Story => {
-  const storyObj = story as Record<string, unknown> | null;
+  if (typeof story !== 'object' || story === null) {
+    return { content: '', targetWords: fallbackWords.map((e) => e.word), title: 'Your Story', wordTranslations: {} };
+  }
 
-  const safeTargetWords: string[] =
-    Array.isArray(storyObj?.targetWords) && storyObj.targetWords.length
-      ? (storyObj.targetWords as string[])
-      : fallbackWords.map((entry) => entry.word);
+  const storyObj = story as Record<string, unknown>;
+
+  const safeTargetWords: string[] = Array.isArray(storyObj.targetWords) && storyObj.targetWords.every(w => typeof w === 'string')
+    ? storyObj.targetWords
+    : fallbackWords.map((entry) => entry.word);
+
+  const wordTranslations = typeof storyObj.wordTranslations === 'object' && storyObj.wordTranslations !== null
+    ? (storyObj.wordTranslations as Record<string, string>)
+    : {};
 
   return {
-    content: (storyObj?.content as string)?.trim() || '',
+    content: typeof storyObj.content === 'string' ? storyObj.content.trim() : '',
     targetWords: safeTargetWords,
-    title: (storyObj?.title as string)?.trim() || 'Your Story',
-    wordTranslations: (storyObj?.wordTranslations as Record<string, string>) || {},
+    title: typeof storyObj.title === 'string' ? storyObj.title.trim() : 'Your Story',
+    wordTranslations,
   };
 };
 
 export const normalizeQuestions = (questionsPayload: unknown): Question[] => {
-  const questionsObj = questionsPayload as Record<string, unknown> | unknown[];
-  const rawQuestions: unknown[] = Array.isArray(questionsObj)
-    ? questionsObj
-    : (questionsObj?.questions as unknown[]) || [];
+  let rawQuestions: unknown[] = [];
+
+  if (Array.isArray(questionsPayload)) {
+    rawQuestions = questionsPayload;
+  } else if (typeof questionsPayload === 'object' && questionsPayload !== null) {
+    const obj = questionsPayload as Record<string, unknown>;
+    if (Array.isArray(obj.questions)) {
+      rawQuestions = obj.questions;
+    }
+  }
 
   if (!Array.isArray(rawQuestions)) {
     throw new Error('AI zwrocilo niepoprawny format pytan.');
@@ -44,20 +57,32 @@ export const normalizeQuestions = (questionsPayload: unknown): Question[] => {
 
   const normalized: Question[] = rawQuestions
     .map((question, index): Question | null => {
-      const q = question as Record<string, unknown> | null;
-      const options = Array.isArray(q?.options) ? (q.options as string[]).slice(0, 4) : [];
-      const correctAnswer = typeof q?.correctAnswer === 'number' ? q.correctAnswer : 0;
+      if (typeof question !== 'object' || question === null) return null;
+
+      const q = question as Record<string, unknown>;
+      const options = Array.isArray(q.options)
+        ? q.options.filter((opt): opt is string => typeof opt === 'string').slice(0, 4)
+        : [];
+      const correctAnswer = typeof q.correctAnswer === 'number' && Number.isInteger(q.correctAnswer)
+        ? q.correctAnswer
+        : 0;
+      const hint = typeof q.hint === 'string' ? q.hint.trim() : '';
+      const id = typeof q.id === 'string' ? q.id : `question-${index + 1}`;
+      const questionText = typeof q.question === 'string' ? q.question.trim() : '';
+      const type = typeof q.type === 'string' ? q.type.trim() : 'general';
+
+      if (!questionText || options.length !== 4) return null;
 
       return {
-        correctAnswer: Number.isInteger(correctAnswer) ? correctAnswer : 0,
-        hint: (q?.hint as string)?.trim() || '',
-        id: (q?.id as string) || `question-${index + 1}`,
+        correctAnswer,
+        hint,
+        id,
         options,
-        question: (q?.question as string)?.trim() || '',
-        type: (q?.type as string)?.trim() || 'general',
+        question: questionText,
+        type,
       };
     })
-    .filter((q): q is Question => q !== null && q.question !== '' && q.options.length === 4);
+    .filter((q): q is Question => q !== null);
 
   if (!normalized.length) {
     throw new Error('Nie udalo sie przygotowac pytan do quizu.');
