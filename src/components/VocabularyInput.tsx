@@ -137,21 +137,23 @@ const VocabularyInput = ({ initialWords = [], onGenerate, onSave }: VocabularyIn
           {/* Category/Style selection */}
           <div className="bg-surface-container-low rounded-3xl p-6 space-y-4 border border-white/5">
             <h4 className="font-headline font-bold text-xs uppercase tracking-widest text-on-surface-variant">Ton Opowieści</h4>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
               {CATEGORY_OPTIONS.map((opt) => (
                 <div 
                   key={opt.value}
                   onClick={() => setCategory(opt.value)}
-                  className={`p-4 rounded-xl border cursor-pointer transition-all group flex items-center gap-3 ${category === opt.value ? 'bg-surface-bright border-primary/60 text-primary shadow-lg shadow-primary/10' : 'bg-surface-container-high border-outline-variant/10 hover:bg-surface-bright'}`}
+                  className={`min-h-[92px] rounded-xl border cursor-pointer transition-all group flex flex-col items-start justify-center gap-2 p-4 ${category === opt.value ? 'bg-surface-bright border-primary/60 text-primary shadow-lg shadow-primary/10' : 'bg-surface-container-high border-outline-variant/10 hover:bg-surface-bright'}`}
                 >
-                  <span className={`material-symbols-outlined ${category === opt.value ? 'text-primary' : 'text-on-surface-variant group-hover:text-primary'}`}>
+                  <span className={`material-symbols-outlined shrink-0 ${category === opt.value ? 'text-primary' : 'text-on-surface-variant group-hover:text-primary'}`}>
                     {opt.value === 'general' ? 'public' : 
                      opt.value === 'daily' ? 'sunny' : 
                      opt.value === 'travel' ? 'explore' : 
                      opt.value === 'business' ? 'work' : 
                      'memory'}
                   </span>
-                  <span className="text-[10px] font-bold uppercase tracking-wider">{opt.label}</span>
+                  <span className="w-full pr-2 text-[13px] font-bold leading-5 whitespace-normal break-normal normal-case tracking-normal">
+                    {opt.label}
+                  </span>
                 </div>
               ))}
             </div>
